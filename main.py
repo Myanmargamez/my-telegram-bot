@@ -6,10 +6,11 @@ from groq import Groq
 app = Flask(__name__)
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-GROQ_API_KEY = os.getenv("GEMINI_API_KEY")  # သို့မဟုတ် os.getenv("GROQ_API_KEY")
+# Environment Variable နှစ်ခုလုံးကို စစ်ပေးမည်
+GROQ_API_KEY = os.getenv("GROQ_API_KEY") or os.getenv("GEMINI_API_KEY")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
-# Groq Client setup
+# Groq Client
 client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 
 def set_webhook():
@@ -32,7 +33,6 @@ def webhook():
         
         if client:
             try:
-                # Groq / Llama-3 model ကို သုံးခြင်း
                 completion = client.chat.completions.create(
                     model="llama-3.3-70b-versatile",
                     messages=[
@@ -55,7 +55,7 @@ def webhook():
 
 @app.route("/", methods=["GET"])
 def index():
-    return "Bot status: Active", 200
+    return "Bot status: Active with Groq", 200
 
 set_webhook()
 
