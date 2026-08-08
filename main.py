@@ -30,7 +30,7 @@ def webhook():
         user_text = data["message"]["text"]
 
         try:
-            # Model နာမည်ကို gemini-2.5-flash ဟု အတိအကျ သုံးပါ
+            # Model နာမည်မှန် (gemini-2.5-flash) ကို သုံးထားသည်
             response = client.models.generate_content(
                 model="gemini-2.5-flash",
                 contents=user_text,
