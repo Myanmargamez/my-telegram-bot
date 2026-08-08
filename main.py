@@ -13,7 +13,8 @@ WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 # Configure Gemini AI
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel("gemini-1.5-flash")
+    # Model name အမှန်သို့ ပြင်ဆင်ထားပါသည်
+    model = genai.GenerativeModel("models/gemini-1.5-flash")
 
 def set_webhook():
     if TELEGRAM_BOT_TOKEN and WEBHOOK_URL:
