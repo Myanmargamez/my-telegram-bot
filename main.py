@@ -30,9 +30,9 @@ def webhook():
         user_text = data["message"]["text"]
 
         try:
-            # Generate response using new SDK method & model name
+            # Corrected Model Name
             response = client.models.generate_content(
-                model="gemini-2.5-flash",
+                model="gemini-1.5-flash",
                 contents=user_text,
             )
             reply_text = response.text
