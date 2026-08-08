@@ -10,7 +10,7 @@ TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
-# Configure New Gemini SDK Client
+# Configure Gemini Client
 client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 
 def set_webhook():
@@ -30,9 +30,9 @@ def webhook():
         user_text = data["message"]["text"]
 
         try:
-            # Model နာမည်မှန် (gemini-2.5-flash) ကို သုံးထားသည်
+            # Model နာမည်အမှန်: gemini-2.0-flash
             response = client.models.generate_content(
-                model="gemini-2.5-flash",
+                model="gemini-2.0-flash",
                 contents=user_text,
             )
             reply_text = response.text
