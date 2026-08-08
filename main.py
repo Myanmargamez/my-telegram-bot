@@ -1,79 +1,61 @@
 import os
-import logging
+import requests
 from flask import Flask, request
-from telegram import Update
-from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, filters
-from openai import OpenAI
+import google.generativeai as genai
 
-# Logging Setup
-logging.basicConfig(level=logging.INFO)
-
-# Environment Variables မှ Tokens များ ရယူခြင်း
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # Render မှပေးသော App URL (e.g. https://your-app.onrender.com)
-
-# Flask Server & Telegram Bot setup
 app = Flask(__name__)
-bot_app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
-client = OpenAI(api_key=OPENAI_API_KEY)
 
-# AI Reply Function
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not update.message or not update.message.text:
-        return
+# Environment Variables
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
-    user_text = update.message.text
+# Configure Gemini AI
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+    model = genai.GenerativeModel("gemini-1.5-flash")
 
-    try:
-        await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
-
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are a friendly Telegram group assistant. Reply concisely in Burmese."
-                },
-                {"role": "user", "content": user_text}
-            ],
-            temperature=0.7
-        )
-
-        reply = response.choices[0].message.content
-        await update.message.reply_text(reply)
-
-    except Exception as e:
-        logging.error(f"Error calling OpenAI API: {e}")
-
-# Telegram Handler ပေါင်းထည့်ခြင်း
-bot_app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
-
-# Webhook Route (Telegram မှ မက်ဆေ့ဂျ်များ ပို့ပေးမည့် အကွက်)
-@app.route(f"/{TELEGRAM_BOT_TOKEN}", methods=["POST"])
-def webhook():
-    if request.method == "POST":
-        async def process():
-            await bot_app.initialize()
-            update = Update.de_json(request.get_json(force=True), bot_app.bot)
-            await bot_app.process_update(update)
-            await bot_app.shutdown()
-
-        import asyncio
-        asyncio.run(process())
-        return "OK", 200
-
-@app.route("/")
-def index():
-    return "Bot is running on Webhook!", 200
-
-# Webhook Set လုပ်သည့် Function
 def set_webhook():
     if TELEGRAM_BOT_TOKEN and WEBHOOK_URL:
-        import requests
-        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/setWebhook?url={WEBHOOK_URL}/{TELEGRAM_BOT_TOKEN}"
-        r = requests.get(url)
-        logging.info(f"Set Webhook Result: {r.json()}")
+        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/setWebhook?url={WEBHOOK_URL}"
+        try:
+            res = requests.get(url)
+            print("Set Webhook Result:", res.json())
+        except Exception as e:
+            print("Webhook setup error:", e)
 
-# Render ပေါ်စတင်ချိန်တွင် Webhook တန်းချိတ်ရန်
+@app.route("/", methods=["POST"])
+def webhook():
+    data = request.get_json()
+    if data and "message" in data and "text" in data["message"]:
+        chat_id = data["message"]["chat"]["id"]
+        user_text = data["message"]["text"]
+
+        try:
+            # Generate response from Gemini
+            response = model.generate_content(user_text)
+            reply_text = response.text
+        except Exception as e:
+            print("Gemini Error:", e)
+            reply_text = "ဝမ်းနည်းပါတယ်၊ အကြောင်းပြန်ရာတွင် အမှားတစ်ခု ရှိနေပါသည်။"
+
+        # Send message back to Telegram
+        telegram_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+        payload = {
+            "chat_id": chat_id,
+            "text": reply_text
+        }
+        requests.post(telegram_url, json=payload)
+
+    return "OK", 200
+
+@app.route("/", methods=["GET"])
+def index():
+    return "Bot is running with Gemini AI!", 200
+
+# Initialize Webhook on app startup
 set_webhook()
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
+    
