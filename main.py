@@ -30,15 +30,15 @@ def webhook():
         user_text = data["message"]["text"]
 
         try:
-            # Model အသစ် gemini-2.0-flash ကို သုံးထားသည်
+            # Quota ပြည့်နေသောကြောင့် gemini-1.5-flash သို့ ပြောင်းသုံးခြင်း
             response = client.models.generate_content(
-                model="gemini-2.0-flash",
+                model="gemini-1.5-flash",
                 contents=user_text,
             )
             reply_text = response.text
         except Exception as e:
             print("Gemini Error:", e)
-            reply_text = "ဝမ်းနည်းပါတယ်၊ အခုချိန်မှာ မော်ဒယ်လ် အသစ်နဲ့ ချိတ်ဆက်နေပါတယ်။"
+            reply_text = "ဝမ်းနည်းပါတယ်၊ အကြောင်းပြန်ရာတွင် အမှားတစ်ခု ရှိနေပါသည်။"
 
         # Send message back to Telegram
         telegram_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
@@ -52,7 +52,7 @@ def webhook():
 
 @app.route("/", methods=["GET"])
 def index():
-    return "Bot is running with Gemini 2.0!", 200
+    return "Bot is running with Gemini 1.5!", 200
 
 # Initialize Webhook on app startup
 set_webhook()
