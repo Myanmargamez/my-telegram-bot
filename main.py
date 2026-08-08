@@ -5,12 +5,10 @@ from google import genai
 
 app = Flask(__name__)
 
-# Environment Variables
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
-# Configure Gemini Client
 client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 
 def set_webhook():
@@ -29,18 +27,19 @@ def webhook():
         chat_id = data["message"]["chat"]["id"]
         user_text = data["message"]["text"]
 
-        try:
-            # Quota ပြည့်နေသောကြောင့် gemini-1.5-flash သို့ ပြောင်းသုံးခြင်း
-            response = client.models.generate_content(
-                model="gemini-1.5-flash",
-                contents=user_text,
-            )
-            reply_text = response.text
-        except Exception as e:
-            print("Gemini Error:", e)
-            reply_text = "ဝမ်းနည်းပါတယ်၊ အကြောင်းပြန်ရာတွင် အမှားတစ်ခု ရှိနေပါသည်။"
+        reply_text = "ဝမ်းနည်းပါတယ်၊ AI ဘက်မှ အကြောင်းပြန်ရန် အဆင်မပြေသေးပါ။"
+        
+        if client:
+            try:
+                response = client.models.generate_content(
+                    model="gemini-2.0-flash",
+                    contents=user_text,
+                )
+                if response and response.text:
+                    reply_text = response.text
+            except Exception as e:
+                print("Gemini API Error Detail:", e)
 
-        # Send message back to Telegram
         telegram_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
         payload = {
             "chat_id": chat_id,
@@ -52,9 +51,8 @@ def webhook():
 
 @app.route("/", methods=["GET"])
 def index():
-    return "Bot is running with Gemini 1.5!", 200
+    return "Bot status: Active", 200
 
-# Initialize Webhook on app startup
 set_webhook()
 
 if __name__ == "__main__":
