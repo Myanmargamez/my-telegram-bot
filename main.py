@@ -30,9 +30,9 @@ def webhook():
         user_text = data["message"]["text"]
 
         try:
-            # Corrected Model Name
+            # "models/" မပါဘဲ "gemini-2.5-flash" လို့ ရေးရပါမည်
             response = client.models.generate_content(
-                model="gemini-1.5-flash",
+                model="gemini-2.5-flash",
                 contents=user_text,
             )
             reply_text = response.text
@@ -59,4 +59,3 @@ set_webhook()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
-    
