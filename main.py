@@ -1,7 +1,7 @@
 import os
 import requests
 from flask import Flask, request
-import google.generativeai as genai
+from google import genai
 
 app = Flask(__name__)
 
@@ -10,11 +10,8 @@ TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
-# Configure Gemini AI
-if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
-    # Model name အမှန်သို့ ပြင်ဆင်ထားပါသည်
-    model = genai.GenerativeModel("models/gemini-1.5-flash")
+# Configure New Gemini SDK Client
+client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 
 def set_webhook():
     if TELEGRAM_BOT_TOKEN and WEBHOOK_URL:
@@ -33,8 +30,11 @@ def webhook():
         user_text = data["message"]["text"]
 
         try:
-            # Generate response from Gemini
-            response = model.generate_content(user_text)
+            # Generate response using new SDK method & model name
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=user_text,
+            )
             reply_text = response.text
         except Exception as e:
             print("Gemini Error:", e)
