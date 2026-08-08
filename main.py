@@ -1,15 +1,16 @@
 import os
 import requests
 from flask import Flask, request
-from google import genai
+from groq import Groq
 
 app = Flask(__name__)
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GROQ_API_KEY = os.getenv("GEMINI_API_KEY")  # သို့မဟုတ် os.getenv("GROQ_API_KEY")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
-client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
+# Groq Client setup
+client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 
 def set_webhook():
     if TELEGRAM_BOT_TOKEN and WEBHOOK_URL:
@@ -31,14 +32,17 @@ def webhook():
         
         if client:
             try:
-                response = client.models.generate_content(
-                    model="gemini-2.0-flash",
-                    contents=user_text,
+                # Groq / Llama-3 model ကို သုံးခြင်း
+                completion = client.chat.completions.create(
+                    model="llama-3.3-70b-versatile",
+                    messages=[
+                        {"role": "user", "content": user_text}
+                    ]
                 )
-                if response and response.text:
-                    reply_text = response.text
+                if completion.choices:
+                    reply_text = completion.choices[0].message.content
             except Exception as e:
-                print("Gemini API Error Detail:", e)
+                print("Groq API Error Detail:", e)
 
         telegram_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
         payload = {
