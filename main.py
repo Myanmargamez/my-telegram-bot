@@ -33,7 +33,7 @@ def webhook():
         if client:
             try:
                 completion = client.chat.completions.create(
-                    model="gemma2-9b-it",
+                    model="openai/gpt-oss-20b",
                     messages=[
                         {"role": "user", "content": user_text}
                     ]
