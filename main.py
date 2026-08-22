@@ -33,7 +33,7 @@ def webhook():
         if client:
             try:
                 completion = client.chat.completions.create(
-                    model="llama3-8b-8192",
+                    model="llama-3.1-8b-instant",
                     messages=[
                         {"role": "user", "content": user_text}
                     ]
@@ -60,4 +60,3 @@ set_webhook()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
-    
