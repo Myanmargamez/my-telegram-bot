@@ -1,4 +1,4 @@
-import os
+herimport os
 import requests
 from flask import Flask, request
 from groq import Groq
@@ -6,11 +6,10 @@ from groq import Groq
 app = Flask(__name__)
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-# Environment Variable နှစ်ခုလုံးကို စစ်ပေးမည်
-GROQ_API_KEY = os.getenv("GROQ_API_KEY") or os.getenv("GEMINI_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
-# Groq Client
+# Groq Client Initialization
 client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 
 def set_webhook():
@@ -34,12 +33,12 @@ def webhook():
         if client:
             try:
                 completion = client.chat.completions.create(
-                    model="llama-3.3-70b-versatile",
+                    model="llama3-8b-8192",
                     messages=[
                         {"role": "user", "content": user_text}
                     ]
                 )
-                if completion.choices:
+                if completion.choices and len(completion.choices) > 0:
                     reply_text = completion.choices[0].message.content
             except Exception as e:
                 print("Groq API Error Detail:", e)
@@ -61,3 +60,4 @@ set_webhook()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+    
